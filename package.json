@@ -1,0 +1,26 @@
+{
+  "name": "hr-airtable-slack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/msolomonTMG/hr-automation.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/msolomonTMG/hr-automation/issues"
+  },
+  "homepage": "https://github.com/msolomonTMG/hr-automation#readme",
+  "dependencies": {
+    "airtable": "^0.5.6",
+    "express": "^4.16.3",
+    "firebase-admin": "^5.12.1",
+    "moment": "^2.22.2",
+    "request": "^2.87.0"
+  }
+}

@@ -1,0 +1,123 @@
+#!/usr/bin/env node
+
+const zapier = require('../zapier')
+const Airtable = require('airtable')
+const firebase = require('firebase-admin')
+const firebaseServiceAccount = JSON.parse(new Buffer(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('ascii'))
+const masterBase = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE_ID)
+const hrbpBases = ["appuPWoEWzibnfSRi"]
+// we want to have a bunch of space separated baseIds for HRBPs var festivals = process.env.FESTIVALS.split(' '); 
+
+firebase.initializeApp({
+  credential: firebase.credential.cert(firebaseServiceAccount),
+  databaseURL: `https://${process.env.FIREBASE_PROJECT_NAME}.firebaseio.com`
+});
+
+const db = firebase.database()
+const ref = db.ref('/')
+
+function getDatabaseSnapshot() {
+  return new Promise(function(resolve, reject) {
+    
+    ref.once('value', (snapshot) => {
+      return resolve(snapshot.val())
+    })
+    
+  });
+}
+
+let recordsToSendInDiffEmail = []
+let dbSnapshot = getDatabaseSnapshot()
+dbSnapshot.then(snapshot => {
+  console.log("SNAPSHOT", snapshot)
+  // loop through each hrbp base
+  let i = 0
+  while (i < hrbpBases.length) {
+    console.log(i)
+    let k = i // we loop faster than we can process so use k as you would use i
+    
+    // initiate base
+    const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(hrbpBases[i])
+    console.log(base)
+    // get all issues in the base
+    base(process.env.AIRTABLE_TABLE_NAME).select({
+        view: "All Issues",
+        sort: [{field: process.env.AIRTABLE_SORT_FIELD_NAME, direction: "desc"}]
+    }).eachPage(function page(issues, fetchNextPage) {
+        // for each issue, check if we have it in firebase
+        // if we dont, we'll set it later
+        // if we do, check if anything changed. if it did, add it to the email
+        // if nothings changed, we're still gonna set it in firebase cuz its easier to
+        for (const issue of issues) {
+          const id = issue.id 
+          
+          if (!snapshot) {
+            // first time case if we've never saved to firebase before
+            snapshot = {}
+          } else if(!snapshot || !snapshot[id]) {
+            // save this issue to our snapshot if not present down below
+          } else if (!helpers.objectsAreEqual(issue.fields, snapshot[id])) {
+            // there is something different about what is in airtable
+            // and what we stored in firebase. lets add it to the email
+            // and we'll sync them up when we set firebase
+            recordsToSendInDiffEmail.push({
+              id: issue.id,
+              hrbp: issue.fields['HRBP'],
+              url: issue.fields['Record URL']
+            })
+          } else {
+            // everything is the same
+          }
+          
+          // either add this issue to firebase if it doesnt exist or
+          // reset all of the fields to match what is in airtable
+          snapshot[id] = issue.fields
+          console.log("SNAPSHOT ID", snapshot[id])
+        }
+        
+        // To fetch the next page of records, call `fetchNextPage`.
+        // If there are more records, `page` will get called again.
+        // If there are no more records, `done` will get called.
+        fetchNextPage();
+
+    }, function done(err) {
+        if (err) { console.error(err); return; }
+        console.log(i)
+        console.log(k)
+        if (k === hrbpBases.length - 1) {
+          // send diff email
+          console.log(recordsToSendInDiffEmail)
+          // update firebase with newest data
+          ref.set(snapshot)
+          // zapier.sendDiffEmail({
+          //   changedRecords: recordsToSendInDiffEmail
+          // })
+        }
+        // return to end the process
+        return
+    });
+    i++;
+  }
+})
+
+
+
+const helpers = {
+  objectsAreEqual (o1, o2) {
+    for(var p in o1){
+        if(o1.hasOwnProperty(p)){
+            if(o1[p] !== o2[p]){
+                return false;
+            }
+        }
+    }
+    for(var p in o2){
+        if(o2.hasOwnProperty(p)){
+            if(o1[p] !== o2[p]){
+                return false;
+            }
+        }
+    }
+    return true;
+  }
+}
