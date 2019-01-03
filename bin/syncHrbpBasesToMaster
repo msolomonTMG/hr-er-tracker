@@ -29,7 +29,6 @@ function getDatabaseSnapshot() {
 let recordsToSendInDiffEmail = []
 let dbSnapshot = getDatabaseSnapshot()
 dbSnapshot.then(snapshot => {
-  console.log("SNAPSHOT", snapshot)
   // loop through each hrbp base
   let i = 0
   while (i < hrbpBases.length) {
@@ -38,7 +37,6 @@ dbSnapshot.then(snapshot => {
     
     // initiate base
     const base = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(hrbpBases[i])
-    console.log(base)
     // get all issues in the base
     base(process.env.AIRTABLE_TABLE_NAME).select({
         view: "All Issues",
@@ -72,7 +70,6 @@ dbSnapshot.then(snapshot => {
           // either add this issue to firebase if it doesnt exist or
           // reset all of the fields to match what is in airtable
           snapshot[id] = issue.fields
-          console.log("SNAPSHOT ID", snapshot[id])
         }
         
         // To fetch the next page of records, call `fetchNextPage`.
@@ -82,16 +79,13 @@ dbSnapshot.then(snapshot => {
 
     }, function done(err) {
         if (err) { console.error(err); return; }
-        console.log(i)
-        console.log(k)
         if (k === hrbpBases.length - 1) {
-          // send diff email
-          console.log(recordsToSendInDiffEmail)
           // update firebase with newest data
           ref.set(snapshot)
-          // zapier.sendDiffEmail({
-          //   changedRecords: recordsToSendInDiffEmail
-          // })
+          // if we have diffs, send an email about em
+          if (recordsToSendInDiffEmail.length > 0) {
+            zapier.sendDiffEmail(recordsToSendInDiffEmail)
+          }
         }
         // return to end the process
         return
@@ -104,19 +98,19 @@ dbSnapshot.then(snapshot => {
 
 const helpers = {
   objectsAreEqual (o1, o2) {
+    // this function does not go into deep comparison
+    // it turns object properties into strings and compares them that way
+    // this means arrays and objects need to be in the same order which I am
+    // assuming always happens since we set firebase to be the same as airtable
     for(var p in o1){
-        if(o1.hasOwnProperty(p)){
-            if(o1[p] !== o2[p]){
-                return false;
-            }
+      if(o1.hasOwnProperty(p)){
+        if(o1[p].toString() != o2[p].toString()){
+          console.log(o1[p])
+          console.log(o2[p])
+          console.log(`"${o1[p]}" is not equal to "${o2[p]}"`)
+          return false;
         }
-    }
-    for(var p in o2){
-        if(o2.hasOwnProperty(p)){
-            if(o1[p] !== o2[p]){
-                return false;
-            }
-        }
+      }
     }
     return true;
   }
