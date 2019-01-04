@@ -1,6 +1,4 @@
-const 
-  express = require('express'),
-  utils = require('./utils');
+const express = require('express');
 var app = express();
 app.set('port', process.env.PORT || 5000);
 app.listen(app.get('port'), function() {
