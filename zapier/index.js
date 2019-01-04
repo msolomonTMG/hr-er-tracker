@@ -39,7 +39,7 @@ const helpers = {
         tableMarkup += `
           <tr>
             <td>${record.hrbp}</td>
-            <td><a href="${record.url}">${record.id}</a></td>
+            <td><a href="https://airtable.com/tblDxNnp3dk18ADBH/viwjS3qRjryZ1h9yJ/${record.masterRecordId}">${record.id}</a></td>
           </tr>
         `
       }

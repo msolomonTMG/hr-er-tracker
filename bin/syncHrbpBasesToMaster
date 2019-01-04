@@ -61,8 +61,15 @@ dbSnapshot.then(snapshot => {
             recordsToSendInDiffEmail.push({
               id: issue.id,
               hrbp: issue.fields['HRBP'],
-              url: issue.fields['Record URL']
+              url: issue.fields['Record URL'],
+              masterRecordId: issue.fields['Master Record ID']
             })
+            
+            let diffs = helpers.objectDiffs(issue.fields, snapshot[id])
+            console.log("diffs", diffs)
+            // update the master airtable with the diffs
+            masterBase(process.env.AIRTABLE_TABLE_NAME).update(issue.fields['Master Record ID'], diffs)
+            console.log(helpers.objectDiffs(issue.fields, snapshot[id]))
           } else {
             // everything is the same
           }
@@ -102,16 +109,37 @@ const helpers = {
     // it turns object properties into strings and compares them that way
     // this means arrays and objects need to be in the same order which I am
     // assuming always happens since we set firebase to be the same as airtable
-    for(var p in o1){
-      if(o1.hasOwnProperty(p)){
+    for(let p in o1){
+      if (o1[p] == undefined) {
+        if (o2[p] == undefined) {
+          return true
+        } else {
+          return false
+        }
+      } else if (o2[p] == undefined) {
+        return false
+      } else {
         if(o1[p].toString() != o2[p].toString()){
-          console.log(o1[p])
-          console.log(o2[p])
           console.log(`"${o1[p]}" is not equal to "${o2[p]}"`)
           return false;
         }
       }
     }
     return true;
+  },
+  objectDiffs (o1, o2) {
+    let diffs = {}
+    for (let p in o1) {
+      if (o1[p] == undefined) {
+        if (o2[p] != undefined) {
+          diffs[p] = o1[p]
+        }
+      } else if (o2[p] == undefined) {
+        diffs[p] = o1[p]
+      } else if (o1[p].toString() != o2[p].toString()) {
+        diffs[p] = o1[p]
+      }
+    }
+    return diffs
   }
 }
