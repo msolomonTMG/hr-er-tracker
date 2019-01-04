@@ -95,8 +95,9 @@ app.post('/syncHrbpBasesToMaster', async function(req, res) {
             // if we have diffs, send an email about em
             if (recordsToSendInDiffEmail.length > 0) {
               zapier.sendDiffEmail(recordsToSendInDiffEmail)
-              res.sendStatus(200)
             }
+            // send status
+            res.sendStatus(200)
           }
           // return to end the process
           return
