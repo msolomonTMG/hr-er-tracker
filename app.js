@@ -2,22 +2,23 @@ const express = require('express');
 var app = express();
 app.set('port', process.env.PORT || 5000);
 
+//TODO: find a way to copy the bin/syncHrbpBasesToMaster
+const zapier = require('./zapier')
+const Airtable = require('airtable')
+const firebase = require('firebase-admin')
+const firebaseServiceAccount = JSON.parse(new Buffer(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('ascii'))
+const masterBase = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE_ID)
+const hrbpBases = process.env.AIRTABLE_HRBP_BASES.split(' ')
+
+firebase.initializeApp({
+  credential: firebase.credential.cert(firebaseServiceAccount),
+  databaseURL: `https://${process.env.FIREBASE_PROJECT_NAME}.firebaseio.com`
+});
+
+const db = firebase.database()
+const ref = db.ref('/')
+
 app.post('/syncHrbpBasesToMaster', async function(req, res) {
-  //TODO: find a way to copy the bin/syncHrbpBasesToMaster
-  const zapier = require('./zapier')
-  const Airtable = require('airtable')
-  const firebase = require('firebase-admin')
-  const firebaseServiceAccount = JSON.parse(new Buffer(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('ascii'))
-  const masterBase = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE_ID)
-  const hrbpBases = process.env.AIRTABLE_HRBP_BASES.split(' ')
-
-  firebase.initializeApp({
-    credential: firebase.credential.cert(firebaseServiceAccount),
-    databaseURL: `https://${process.env.FIREBASE_PROJECT_NAME}.firebaseio.com`
-  });
-
-  const db = firebase.database()
-  const ref = db.ref('/')
 
   function getDatabaseSnapshot() {
     return new Promise(function(resolve, reject) {
