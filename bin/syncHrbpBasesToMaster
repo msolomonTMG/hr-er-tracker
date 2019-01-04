@@ -5,8 +5,7 @@ const Airtable = require('airtable')
 const firebase = require('firebase-admin')
 const firebaseServiceAccount = JSON.parse(new Buffer(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('ascii'))
 const masterBase = new Airtable({apiKey: process.env.AIRTABLE_API_KEY}).base(process.env.AIRTABLE_BASE_ID)
-const hrbpBases = ["appuPWoEWzibnfSRi"]
-// we want to have a bunch of space separated baseIds for HRBPs var festivals = process.env.FESTIVALS.split(' '); 
+const hrbpBases = process.env.AIRTABLE_HRBP_BASES.split(' ')
 
 firebase.initializeApp({
   credential: firebase.credential.cert(firebaseServiceAccount),
