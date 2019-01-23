@@ -59,6 +59,7 @@ dbSnapshot.then(snapshot => {
             // and we'll sync them up when we set firebase
             recordsToSendInDiffEmail.push({
               id: issue.id,
+              issueKey: issue.fields['Issue Key'],
               hrbp: issue.fields['HRBP'],
               url: issue.fields['Record URL'],
               masterRecordId: issue.fields['Master Record ID']
@@ -84,6 +85,7 @@ dbSnapshot.then(snapshot => {
         fetchNextPage();
 
     }, function done(err) {
+        console.log('DONE')
         if (err) { console.error(err); return; }
         if (k === hrbpBases.length - 1) {
           // update firebase with newest data

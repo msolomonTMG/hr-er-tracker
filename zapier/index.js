@@ -30,7 +30,7 @@ const helpers = {
         <table>
           <tr>
             <th>HRBP</th>
-            <th>Issue Record ID</th>
+            <th>Issue Key</th>
           </tr>
       `
       for (const record of changedRecords) {
@@ -39,7 +39,7 @@ const helpers = {
         tableMarkup += `
           <tr>
             <td>${record.hrbp}</td>
-            <td><a href="https://airtable.com/tblDxNnp3dk18ADBH/viwjS3qRjryZ1h9yJ/${record.masterRecordId}">${record.get('Issue Key')}</a></td>
+            <td><a href="https://airtable.com/tblDxNnp3dk18ADBH/viwjS3qRjryZ1h9yJ/${record.masterRecordId}">${record.issueKey}</a></td>
           </tr>
         `
       }
